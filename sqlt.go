@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -30,6 +31,7 @@ type DB struct {
 	stats     []DbStatus
 	heartbeat bool
 	lastBeat  string
+	logger    *log.Logger
 }
 
 //DbStatus for status response
@@ -110,6 +112,11 @@ func openConnection(driverName, sources string, groupName string) (*DB, error) {
 	//set maxRetry default value
 	maxRetry = 1
 	return db, err
+}
+
+//SetLogger Set output Logger
+func (db *DB) SetLogger(l *log.Logger) {
+	db.logger = l
 }
 
 //Open connection to database
@@ -266,6 +273,9 @@ func (db *DB) Master() *sqlx.DB {
 
 // Query queries the database and returns an *sql.Rows.
 func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	if db.logger != nil {
+		db.logger.Printf(query)
+	}
 	r, err := db.sqlxdb[db.slave()].Query(query, args...)
 	return r, err
 }
@@ -286,12 +296,18 @@ func (db *DB) PersistentQuery(query string, args ...interface{}) (*sql.Rows, err
 
 //QueryRow queries the database and returns an *sqlx.Row.
 func (db *DB) QueryRow(query string, args ...interface{}) *sql.Row {
+	if db.logger != nil {
+		db.logger.Printf(query)
+	}
 	rows := db.sqlxdb[db.slave()].QueryRow(query, args...)
 	return rows
 }
 
 //Queryx queries the database and returns an *sqlx.Rows.
 func (db *DB) Queryx(query string, args ...interface{}) (*sqlx.Rows, error) {
+	if db.logger != nil {
+		db.logger.Printf(query)
+	}
 	r, err := db.sqlxdb[db.slave()].Queryx(query, args...)
 	return r, err
 }
@@ -312,12 +328,18 @@ func (db *DB) PersistentQueryx(query string, args ...interface{}) (*sqlx.Rows, e
 
 // QueryRowx queries the database and returns an *sqlx.Row.
 func (db *DB) QueryRowx(query string, args ...interface{}) *sqlx.Row {
+	if db.logger != nil {
+		db.logger.Printf(query)
+	}
 	rows := db.sqlxdb[db.slave()].QueryRowx(query, args...)
 	return rows
 }
 
 //Exec using master db
 func (db *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
+	if db.logger != nil {
+		db.logger.Printf(query)
+	}
 	return db.sqlxdb[0].Exec(query, args...)
 }
 
@@ -328,6 +350,9 @@ func (db *DB) MustExec(query string, args ...interface{}) sql.Result {
 
 //Select using slave db.
 func (db *DB) Select(dest interface{}, query string, args ...interface{}) error {
+	if db.logger != nil {
+		db.logger.Printf(query)
+	}
 	return db.sqlxdb[db.slave()].Select(dest, query, args...)
 }
 
@@ -347,6 +372,9 @@ func (db *DB) PersistentSelect(dest interface{}, query string, args ...interface
 
 //Get using slave.
 func (db *DB) Get(dest interface{}, query string, args ...interface{}) error {
+	if db.logger != nil {
+		db.logger.Printf(query)
+	}
 	return db.sqlxdb[db.slave()].Get(dest, query, args...)
 }
 

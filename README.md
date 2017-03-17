@@ -142,6 +142,45 @@ DbStatus {
 }
 ```
 
+Query Logger
+------
+
+You can log all query by set the logger
+
+```go
+databaseCon := "con1;" + "con2;" + "con3"
+db, err := sqlt.OpenWithName("postgres", databaseCon, "order")
+
+if err != nil {
+  return err
+}
+
+//set query logger, it will println all query to defined logger
+l := log.New(os.Stdout, "[sql]", log.LstdFlags)
+db.SetLogger(l)
+```
+
+Sample Output:
+
+```go
+[sql]2017/03/17 19:00:27
+					SELECT inbox_id
+					FROM ws_inbox_reputation
+					WHERE
+					user_id = 34088 AND
+					shop_id NOT IN (2184) AND
+					status IN (1, 2) AND
+					read_status = 1
+
+[sql]2017/03/17 19:00:27
+					SELECT inbox_id
+					FROM ws_inbox_review
+					WHERE
+					user_id = 34088 AND
+					shop_id = 2184 AND
+					element_id = 4481
+```
+
 
 ----------------------------------
 
