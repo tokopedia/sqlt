@@ -77,7 +77,7 @@ func (db *DB) PingContext(ctx context.Context) error {
 
 	if !db.heartBeat {
 		for _, val := range db.sqlxdb {
-			err = val.PingContext(ctx)
+			err = val.DB.PingContext(ctx)
 			if err != nil {
 				return err
 			}
@@ -87,7 +87,7 @@ func (db *DB) PingContext(ctx context.Context) error {
 
 	for i := 0; i < len(db.activedb); i++ {
 		val := db.activedb[i]
-		err = db.sqlxdb[val].PingContext(ctx)
+		err = db.sqlxdb[val].DB.PingContext(ctx)
 		name := db.stats[val].Name
 
 		if err != nil {
@@ -112,7 +112,7 @@ func (db *DB) PingContext(ctx context.Context) error {
 
 	for i := 0; i < len(db.inactivedb); i++ {
 		val := db.inactivedb[i]
-		err = db.sqlxdb[val].PingContext(ctx)
+		err = db.sqlxdb[val].DB.PingContext(ctx)
 		name := db.stats[val].Name
 
 		if err != nil {
