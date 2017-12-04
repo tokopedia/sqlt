@@ -262,6 +262,13 @@ func (db *DB) SetMaxOpenConnections(max int) {
 	}
 }
 
+// SetMaxIdleConnections to set max idle connections
+func (db *DB) SetMaxIdleConnections(max int) {
+	for i := range db.sqlxdb {
+		db.sqlxdb[i].SetMaxIdleConns(max)
+	}
+}
+
 // SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
 // Expired connections may be closed lazily before reuse.
 // If d <= 0, connections are reused forever.
