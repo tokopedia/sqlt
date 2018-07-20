@@ -211,6 +211,12 @@ func (db *DB) QueryRowxContext(ctx context.Context, query string, args ...interf
 	return rows
 }
 
+// QueryRowxMasterContext queries the database and returns an *sqlx.Row.
+func (db *DB) QueryRowxMasterContext(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
+	rows := db.sqlxdb[0].QueryRowxContext(ctx, query, args...)
+	return rows
+}
+
 // ExecContext using master db
 func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	return db.sqlxdb[0].ExecContext(ctx, query, args...)
