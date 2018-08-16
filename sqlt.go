@@ -23,6 +23,7 @@ type DB struct {
 	sqlxdb     []*sqlx.DB
 	activedb   []int
 	inactivedb []int
+	dsn        []string
 	driverName string
 	groupName  string
 	length     int
@@ -52,6 +53,9 @@ const defaultGroupName = "sqlt_open"
 
 var dbLengthMutex = &sync.Mutex{}
 
+// only use debug when needed
+var debug bool
+
 func openConnection(driverName, sources string, groupName string) (*DB, error) {
 	var err error
 
@@ -66,6 +70,7 @@ func openConnection(driverName, sources string, groupName string) (*DB, error) {
 	db := &DB{
 		sqlxdb: make([]*sqlx.DB, connsLength),
 		stats:  make([]DbStatus, connsLength),
+		dsn:    make([]string, connsLength),
 	}
 	db.length = connsLength
 	db.driverName = driverName
@@ -95,6 +100,7 @@ func openConnection(driverName, sources string, groupName string) (*DB, error) {
 
 		db.stats[i] = status
 		db.activedb = append(db.activedb, i)
+		db.dsn[i] = conns[i]
 	}
 
 	// set the default group name
@@ -116,6 +122,11 @@ func Open(driverName, sources string) (*DB, error) {
 // OpenWithName open the connection and set connection group name
 func OpenWithName(driverName, sources string, name string) (*DB, error) {
 	return openConnection(driverName, sources, name)
+}
+
+// SetDebug for sqlt
+func SetDebug(v bool) {
+	debug = v
 }
 
 // GetStatus return database status
@@ -509,11 +520,17 @@ func (db *DB) slave() int {
 	dbLengthMutex.Lock()
 	defer dbLengthMutex.Unlock()
 	if db.length <= 1 {
+		if debug {
+			fmt.Print("selecting master, slave is not exists")
+		}
 		return 0
 	}
 
 	slave := int(1 + (atomic.AddUint64(&db.count, 1) % uint64(db.length-1)))
 	active := db.activedb[slave]
+	if debug {
+		fmt.Printf("slave: %d. dsn: %s", active, db.dsn[active])
+	}
 	return active
 }
 
