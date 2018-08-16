@@ -33,6 +33,8 @@ type DB struct {
 	heartBeat bool
 	stopBeat  chan bool
 	lastBeat  string
+	// only use when needed
+	debug bool
 }
 
 // DbStatus for status response
@@ -52,9 +54,6 @@ type statusResponse struct {
 const defaultGroupName = "sqlt_open"
 
 var dbLengthMutex = &sync.Mutex{}
-
-// only use debug when needed
-var debug bool
 
 func openConnection(driverName, sources string, groupName string) (*DB, error) {
 	var err error
@@ -125,8 +124,8 @@ func OpenWithName(driverName, sources string, name string) (*DB, error) {
 }
 
 // SetDebug for sqlt
-func SetDebug(v bool) {
-	debug = v
+func (db *DB) SetDebug(v bool) {
+	db.debug = v
 }
 
 // GetStatus return database status
@@ -520,7 +519,7 @@ func (db *DB) slave() int {
 	dbLengthMutex.Lock()
 	defer dbLengthMutex.Unlock()
 	if db.length <= 1 {
-		if debug {
+		if db.debug {
 			fmt.Print("selecting master, slave is not exists")
 		}
 		return 0
@@ -528,7 +527,7 @@ func (db *DB) slave() int {
 
 	slave := int(1 + (atomic.AddUint64(&db.count, 1) % uint64(db.length-1)))
 	active := db.activedb[slave]
-	if debug {
+	if db.debug {
 		fmt.Printf("slave: %d. dsn: %s", active, db.dsn[active])
 	}
 	return active
